@@ -1,4 +1,5 @@
 import { Package } from '../types';
+import { applyProgressUpdate, applyStatusTransitions, calculatePosition } from './packageStatusRules';
 
 const cities = [
   { name: '北京', x: 70, y: 20 },
@@ -76,15 +77,9 @@ export function generatePackages(count: number): Package[] {
 
 export function movePackages(packages: Package[]): Package[] {
   return packages.map((pkg) => {
-    if (pkg.status === 'delivered') return pkg;
-
-    const newProgress = Math.min(pkg.progress + (Math.random() * 3), 100);
-    const currentIndex = Math.min(Math.floor((newProgress / 100) * (pkg.route.length - 1)), pkg.route.length - 1);
-    const pos = pkg.route[currentIndex];
-
-    let newStatus = pkg.status;
-    if (newProgress >= 100) newStatus = 'delivered';
-    else if (Math.random() < 0.005 && pkg.status !== 'exception') newStatus = 'exception';
+    const newProgress = applyProgressUpdate(pkg);
+    const pos = calculatePosition(pkg, newProgress);
+    const newStatus = applyStatusTransitions(pkg, newProgress);
 
     return {
       ...pkg,
